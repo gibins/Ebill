@@ -3,35 +3,51 @@ package com.ebill.api.repository.impl;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.support.JpaEntityInformation;
+import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery;
+import org.springframework.data.repository.NoRepositoryBean;
 
 import com.ebill.api.repository.GenericRepo;
 
+@NoRepositoryBean
 public class GenericRepoImpl<T, ID extends Serializable> extends SimpleJpaRepository<T, ID>
-		implements GenericRepo<T, ID> {
+		implements GenericRepo<T, ID>, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private final EntityManager em;
 
-	public GenericRepoImpl(Class<T> domainClass, EntityManager em) {
-		super(domainClass, em);
+	private final JpaEntityInformation jpaEntityInformation;
+	
 
-		this.em = em;
+
+	public GenericRepoImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager em) {
+		super(entityInformation, em);
+
+		this.em = em; 
+		this.jpaEntityInformation= entityInformation;
 
 	}
+	
+	  /*public GenericRepoImpl(Class<T> domainClass, EntityManager em) {
+	        this(JpaEntityInformationSupport.getMetadata(domainClass, em), em, null); 
+	    }*/
+	
+	  
+	  private  Class<?> springDataRepositoryInterface;
+	  public Class<?> getSpringDataRepositoryInterface() {
+	   return springDataRepositoryInterface;
+	  }
 
 	@Override
 	public <S extends T> S save(S entity) {
@@ -41,7 +57,7 @@ public class GenericRepoImpl<T, ID extends Serializable> extends SimpleJpaReposi
 	@Override
 	public List<T> search(CriteriaQuery<T> criteriaQuery, Map<String, Object> parameterMap, Integer fromIndex,
 			Integer neededCount) {
-		
+
 		TypedQuery<T> query = em.createQuery(criteriaQuery);
 
 		if (parameterMap != null) {
